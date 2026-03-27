@@ -124,8 +124,7 @@
 
   input[type=text],
   input[type=number],
-  select,
-  input[type=url] {
+  select {
     width: 100%;
     padding: 11px 14px;
     border: 2px solid var(--border);
@@ -140,6 +139,86 @@
 
   input:focus, select:focus { border-color: var(--green); }
 
+  /* ── IMAGE UPLOAD ── */
+  .image-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    background: #fafafa;
+  }
+
+  .image-upload-area:hover,
+  .image-upload-area.drag-over {
+    border-color: var(--green);
+    background: #f0faf4;
+  }
+
+  .image-upload-area input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  .upload-placeholder .upload-icon { font-size: 2rem; }
+  .upload-placeholder .upload-text { font-size: 0.85rem; color: var(--muted); }
+  .upload-placeholder .upload-hint { font-size: 0.75rem; color: #aaa; }
+
+  /* ── IMAGE PREVIEW ── */
+  .image-preview-wrap {
+    display: none;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .image-preview-wrap.has-image { display: block; }
+
+  .image-preview-wrap img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+  }
+
+  .remove-preview-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.65);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .remove-preview-btn:hover { background: var(--red); }
+
+  .image-upload-area.hidden { display: none; }
+
+  /* ── BTN ── */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -161,6 +240,16 @@
   .btn-yellow { background: var(--yellow); color: var(--black); }
   .btn-red { background: var(--red); color: white; }
   .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+
+  /* ── PROGRESS ── */
+  .upload-progress {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--green);
+    margin-top: 6px;
+    font-weight: 600;
+    text-align: center;
+  }
 
   /* ── TOAST ── */
   .toast {
@@ -316,6 +405,18 @@
   }
 
   .empty-msg .e { font-size: 2rem; margin-bottom: 8px; }
+
+  /* ── IMAGE SIZE WARNING ── */
+  .size-warning {
+    display: none;
+    font-size: 0.78rem;
+    color: #e67e22;
+    margin-top: 6px;
+    background: #fff8f0;
+    border: 1px solid #f5cba7;
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
 </style>
 </head>
 <body>
@@ -379,9 +480,30 @@
         <input type="text" id="iPhone" placeholder="e.g. 0712345678"/>
       </div>
 
+      <!-- ── IMAGE UPLOAD ── -->
       <div class="field">
-        <label>Image URL (optional)</label>
-        <input type="url" id="iImage" placeholder="https://... paste image link"/>
+        <label>📸 Picha ya Bidhaa (optional)</label>
+
+        <!-- Upload area (shown when no image) -->
+        <div class="image-upload-area" id="uploadArea">
+          <input type="file" id="iImageFile" accept="image/*" onchange="handleImageUpload(event)"/>
+          <div class="upload-placeholder">
+            <span class="upload-icon">🖼️</span>
+            <span class="upload-text">Bonyeza hapa au drag & drop picha</span>
+            <span class="upload-hint">JPG, PNG, WEBP — max 5MB recommended</span>
+          </div>
+        </div>
+
+        <!-- Preview (shown when image selected) -->
+        <div class="image-preview-wrap" id="previewWrap">
+          <img id="previewImg" src="" alt="Preview"/>
+          <button class="remove-preview-btn" onclick="removeImage()" title="Remove image">✕</button>
+        </div>
+
+        <div class="size-warning" id="sizeWarning">
+          ⚠️ Picha ni kubwa sana (zaidi ya 2MB). Inaweza kufanya storage ijae haraka. Tumia picha ndogo kwa matokeo bora.
+        </div>
+        <div class="upload-progress" id="uploadProgress">⏳ Inapakua picha...</div>
       </div>
 
       <button class="btn btn-green" onclick="addItem()">✅ Ongeza Item</button>
@@ -398,14 +520,16 @@
         </div>
       </div>
 
-      <!-- QUICK STATS CARD -->
+      <!-- QUICK TIPS CARD -->
       <div class="card">
         <div class="card-title">📊 Quick Tips</div>
-        <p style="font-size:0.85rem;color:var(--muted);line-height:1.6">
+        <p style="font-size:0.85rem;color:var(--muted);line-height:1.7">
           • Bookmark this page — it's your secret admin link<br>
-          • Always add clear image links for faster sales<br>
+          • 📸 Upload picha moja kwa kila item kwa clarity<br>
+          • Compress images to under 1MB for faster loading<br>
           • Remove items immediately after selling<br>
-          • Use WhatsApp number format: 07XXXXXXXX
+          • Use WhatsApp number format: 07XXXXXXXX<br>
+          • Images zinawekwa kwenye browser — clear cache = zinaenda
         </p>
       </div>
     </div>
@@ -455,8 +579,76 @@ function toast(msg, isError = false) {
   t.textContent = msg;
   t.style.background = isError ? '#c0392b' : '#1a7a3c';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
+
+// ── IMAGE HANDLING ──
+let currentImageBase64 = '';
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const progress = document.getElementById('uploadProgress');
+  const warning = document.getElementById('sizeWarning');
+
+  // Show size warning if > 2MB
+  if (file.size > 2 * 1024 * 1024) {
+    warning.style.display = 'block';
+  } else {
+    warning.style.display = 'none';
+  }
+
+  // 5MB hard limit
+  if (file.size > 5 * 1024 * 1024) {
+    toast('⚠️ Picha ni kubwa mno! Max 5MB.', true);
+    event.target.value = '';
+    return;
+  }
+
+  progress.style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    currentImageBase64 = e.target.result; // data:image/...;base64,...
+    document.getElementById('previewImg').src = currentImageBase64;
+    document.getElementById('previewWrap').classList.add('has-image');
+    document.getElementById('uploadArea').classList.add('hidden');
+    progress.style.display = 'none';
+  };
+  reader.onerror = function() {
+    toast('❌ Hitilafu ya kupakua picha. Jaribu tena.', true);
+    progress.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  currentImageBase64 = '';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('previewWrap').classList.remove('has-image');
+  document.getElementById('uploadArea').classList.remove('hidden');
+  document.getElementById('iImageFile').value = '';
+  document.getElementById('sizeWarning').style.display = 'none';
+}
+
+// Drag & drop support
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('iImageFile').files = dt.files;
+    handleImageUpload({ target: { files: [file] } });
+  } else {
+    toast('⚠️ Faili hii si picha.', true);
+  }
+});
 
 // ── ADD ITEM ──
 function addItem() {
@@ -464,7 +656,6 @@ function addItem() {
   const category = document.getElementById('iCategory').value;
   const price = document.getElementById('iPrice').value.trim();
   const phone = document.getElementById('iPhone').value.trim();
-  const image = document.getElementById('iImage').value.trim();
 
   if (!name || !category || !price || !phone) {
     toast('⚠️ Jaza sehemu zote muhimu!', true); return;
@@ -473,22 +664,33 @@ function addItem() {
     toast('⚠️ Nambari ya simu lazima iwe kama 07XXXXXXXX', true); return;
   }
 
+  // Try to save — localStorage can fail if full (base64 images are big)
   const items = getItems();
-  items.unshift({
+  const newItem = {
     id: Date.now(),
     name, category,
     price: parseFloat(price),
     phone,
-    image,
+    image: currentImageBase64,
     addedAt: new Date().toLocaleDateString('en-KE')
-  });
-  saveItems(items);
+  };
+  items.unshift(newItem);
 
-  // reset
+  try {
+    saveItems(items);
+  } catch(e) {
+    // Storage quota exceeded — try saving without image
+    toast('⚠️ Storage imejaa! Picha haikuhifadhiwa, item imeongezwa bila picha.', true);
+    newItem.image = '';
+    items[0] = newItem;
+    saveItems(items);
+  }
+
+  // Reset form
   document.getElementById('iName').value = '';
   document.getElementById('iPrice').value = '';
   document.getElementById('iPhone').value = '';
-  document.getElementById('iImage').value = '';
+  removeImage();
 
   toast('✅ Item imeongezwa successfully!');
   renderAll();
@@ -565,11 +767,16 @@ function renderAll() {
   listEl.innerHTML = items.map((item, idx) => `
     <div class="admin-item" style="animation-delay:${idx*0.04}s">
       <div class="admin-item-img">
-        ${item.image ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.textContent='${getEmoji(item.category)}'"/>` : getEmoji(item.category)}
+        ${item.image
+          ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='${getEmoji(item.category)}'"/>`
+          : getEmoji(item.category)}
       </div>
       <div class="admin-item-info">
         <div class="admin-item-name">${item.name}</div>
-        <div class="admin-item-meta">${item.category} • 📞 ${item.phone} • Added ${item.addedAt || '—'}</div>
+        <div class="admin-item-meta">
+          ${item.category} • 📞 ${item.phone} • Added ${item.addedAt || '—'}
+          ${item.image ? ' • <span style="color:var(--green)">📸 Ina picha</span>' : ' • <span style="color:#aaa">Picha: —</span>'}
+        </div>
       </div>
       <div class="admin-item-price">KSh ${Number(item.price).toLocaleString()}</div>
       <button class="btn btn-red btn-sm" onclick="removeItem(${item.id})">🗑️ Sold/Remove</button>
